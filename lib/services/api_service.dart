@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   //usar ip en caso de utilizar dispositivo real
-  static const base = 'http://localhost:3000/api/empresas';
+  static const base = 'http://10.0.2.2:3000/api/empresas';
   static Future<List<Empresa>> getEmpresas() async {
     final res = await http.get(Uri.parse(base));
     if(res.statusCode == 200){
