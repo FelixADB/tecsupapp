@@ -1,4 +1,5 @@
 import 'package:crud_test/providers/empresa_provider.dart';
+import 'package:crud_test/providers/empleado_provider.dart';
 import 'package:crud_test/screens/screens.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,8 +11,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create:(context) => EmpresaProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => EmpresaProvider()),
+        ChangeNotifierProvider(create: (_) => EmpleadoProvider()), // NUEVO
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Registro de Empresas',

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:crud_test/models/empresa.dart';
+import 'package:crud_test/models/empleado.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,6 +10,7 @@ class ApiService {
   static const base = 'http://10.0.2.2:3000/api/empresas';
   //static const base = 'https://tecsupapp-backend.onrender.com/api/empresas';
   static const authBase = 'http://10.0.2.2:3000/api/auth';
+  static const empleadoBase = 'http://10.0.2.2:3000/api/empleados';
 
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
@@ -76,5 +78,28 @@ class ApiService {
   static Future<void> deleteEmpresa(int id) async {
     final res = await http.delete(Uri.parse('$base/$id'), headers: await _getHeaders());
     if (res.statusCode != 200) throw Exception('Error al eliminar');
+  }
+
+  static Future<List<Empleado>> getEmpleados(int empresaId) async {
+    final res = await http.get(Uri.parse('$empleadoBase/empresa/$empresaId'), headers: await _getHeaders());
+    if (res.statusCode == 200) {
+      final List data = jsonDecode(res.body);
+      return data.map((e) => Empleado.fromJson(e)).toList();
+    } else {
+      throw Exception('Error al cargar empleados');
+    }
+  }
+
+  static Future<Empleado> createEmpleado(Empleado e) async {
+    final res = await http.post(
+      Uri.parse(empleadoBase),
+      headers: await _getHeaders(),
+      body: jsonEncode(e.toJson()),
+    );
+    if (res.statusCode == 201) {
+      return Empleado.fromJson(jsonDecode(res.body));
+    } else {
+      throw Exception('Error al registrar empleado');
+    }
   }
 }
