@@ -9,13 +9,22 @@ class EmpleadoProvider with ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> loadEmpleados(int empresaId) async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
     try {
       _empleados = await ApiService.getEmpleados(empresaId);
     } catch (e) {
-      print(e.toString());
+      _errorMessage = 'Error al cargar empleados: ${e.toString()}';
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -29,7 +38,7 @@ class EmpleadoProvider with ChangeNotifier {
       final nuevo = await ApiService.createEmpleado(e);
       _empleados.add(nuevo);
     } catch (e) {
-      print(e.toString());
+      _errorMessage = 'Error al guardar empleado: ${e.toString()}';
       rethrow;
     } finally {
       _isLoading = false;

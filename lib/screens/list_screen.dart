@@ -19,7 +19,7 @@ class _ListScreenState extends State<ListScreen> {
     });
   }
 
-  Future<void> _confirmDelete(BuildContext context, int id, String nombre) async {
+  Future<bool> _confirmDelete(BuildContext context, int id, String nombre) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -52,10 +52,13 @@ class _ListScreenState extends State<ListScreen> {
             ),
           );
         }
+        return true;
       } catch (e) {
         // Error will be shown by provider.errorMessage listener
+        return false;
       }
     }
+    return false;
   }
 
   @override
@@ -82,39 +85,68 @@ class _ListScreenState extends State<ListScreen> {
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              onChanged: (value) => provider.buscarEmpresa(value),
+              decoration: InputDecoration(
+                labelText: 'Buscar por Nombre o RUC',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+
           if (provider.isLoading) LinearProgressIndicator(),
           Expanded(
             child: provider.empresas.isEmpty
-                ? Center(child: Text('No hay empresas registradas'))
-                : ListView.builder(
-                    padding: EdgeInsets.all(10),
-                    itemCount: provider.empresas.length,
-                    itemBuilder: (_, i) {
-                      final Empresa e = provider.empresas[i];
-                      return Card(
-                        elevation: 3,
-                        margin: EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(16)),
-                        child: ListTile(
-                          title: Text(e.nombre, style: TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text("RUC: ${e.ruc}"),
-                          onTap: () => Navigator.pushNamed(context, "/detail", arguments: e),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.edit, color: Colors.indigo),
+                ? const Center(child: Text('No hay empresas registradas'))
+                : RefreshIndicator(
+                    onRefresh: () async {
+                      // Esto se ejecuta al jalar la lista hacia abajo
+                      await provider.load(); 
+                    },
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(10),
+                      itemCount: provider.empresas.length,
+                      itemBuilder: (_, i) {
+                        final Empresa e = provider.empresas[i];
+                        
+                        // 3. NUEVO: Envolvemos la Card en un Dismissible
+                        return Dismissible(
+                          key: Key(e.id.toString()), // Llave única obligatoria
+                          direction: DismissDirection.endToStart, // Solo deslizar de derecha a izquierda
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            color: Colors.red,
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            child: const Icon(Icons.delete, color: Colors.white, size: 30),
+                          ),
+                          // Confirmación antes de borrar al deslizar
+                          confirmDismiss: (direction) async {
+                            return await _confirmDelete(context, e.id!, e.nombre);
+                          },
+                          // El contenido original (tu Card se mantiene igual, solo le quitamos el botón de borrar porque ya se hace deslizando)
+                          child: Card(
+                            elevation: 3,
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(16)),
+                            child: ListTile(
+                              title: Text(e.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
+                              subtitle: Text("RUC: ${e.ruc}"),
+                              onTap: () => Navigator.pushNamed(context, "/detail", arguments: e),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.indigo),
                                 onPressed: () => Navigator.pushNamed(context, "/form", arguments: e),
                               ),
-                              IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _confirmDelete(context, e.id!, e.nombre),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
           ),
         ],

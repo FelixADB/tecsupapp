@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 
 class EmpresaProvider with ChangeNotifier {
   List<Empresa> _empresas = [];
-  List<Empresa> get empresas => _empresas;
+  List<Empresa> _empresasFiltradas = [];
+  List<Empresa> get empresas => _empresasFiltradas;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -31,11 +32,26 @@ class EmpresaProvider with ChangeNotifier {
     _setError(null);
     try {
       _empresas = await ApiService.getEmpresas();
+      _empresasFiltradas = _empresas;
     } catch (e) {
       _setError(e.toString());
     } finally {
       _setLoading(false);
     }
+  }
+
+  void buscarEmpresa(String query) {
+    if (query.isEmpty) {
+      _empresasFiltradas = _empresas;
+    } else {
+      _empresasFiltradas = _empresas.where((empresa) {
+        final nombreLower = empresa.nombre.toLowerCase();
+        final rucLower = empresa.ruc.toLowerCase();
+        final searchLower = query.toLowerCase();
+        return nombreLower.contains(searchLower) || rucLower.contains(searchLower);
+      }).toList();
+    }
+    notifyListeners();
   }
 
   Future<void> add(Empresa e) async {
@@ -44,6 +60,7 @@ class EmpresaProvider with ChangeNotifier {
     try {
       final nuevo = await ApiService.createEmpresa(e);
       _empresas.add(nuevo);
+      _empresasFiltradas = _empresas;
     } catch (e) {
       _setError(e.toString());
       rethrow;
@@ -61,6 +78,7 @@ class EmpresaProvider with ChangeNotifier {
       if (i != -1) {
         _empresas[i] = updated;
       }
+      _empresasFiltradas = _empresas;
     } catch (e) {
       _setError(e.toString());
       rethrow;
@@ -75,6 +93,7 @@ class EmpresaProvider with ChangeNotifier {
     try {
       await ApiService.deleteEmpresa(id);
       _empresas.removeWhere((x) => x.id == id);
+      _empresasFiltradas = _empresas;
     } catch (e) {
       _setError(e.toString());
       rethrow;

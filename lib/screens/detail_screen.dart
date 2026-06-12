@@ -147,19 +147,6 @@ class _DetailScreenState extends State<DetailScreen> {
       orElse: () => Empresa(id: -1, nombre: 'No encontrada', ruc: ''),
     );
 
-    // Si la empresa fue eliminada, mostrar mensaje y retroceder
-    if (empresaActual.id == -1 && !isLoading) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Empresa no encontrada'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        Navigator.pop(context);
-      });
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Detalle de la Empresa'),
