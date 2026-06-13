@@ -45,4 +45,20 @@ class EmpleadoProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> remove(int id) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await ApiService.deleteEmpleado(id);
+      _empleados.removeWhere((x) => x.id == id);
+    } catch (e) {
+      _errorMessage = 'Error al eliminar empleado: ${e.toString()}';
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

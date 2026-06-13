@@ -102,4 +102,12 @@ class ApiService {
       throw Exception('Error al registrar empleado');
     }
   }
+
+  static Future<void> deleteEmpleado(int id) async {
+    final res = await http.delete(
+      Uri.parse('$empleadoBase/$id'), 
+      headers: await _getHeaders()
+    );
+    if (res.statusCode != 200) throw Exception('Error al eliminar empleado');
+  }
 }

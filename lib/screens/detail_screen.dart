@@ -62,6 +62,36 @@ class _DetailScreenState extends State<DetailScreen> {
     }
   }
 
+  Future<void> _confirmDeleteEmpleado(BuildContext context, int id, String nombre) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Desvincular Empleado', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text('¿Estás seguro de que deseas eliminar a "$nombre"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar', style: TextStyle(color: Colors.grey))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Eliminar', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        // ignore: use_build_context_synchronously
+        await Provider.of<EmpleadoProvider>(context, listen: false).remove(id);
+        if (mounted) {
+          // ignore: use_build_context_synchronously
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Empleado eliminado'), backgroundColor: Colors.green)
+          );
+        }
+      } catch (e) {
+        // El proveedor ya se encarga
+      }
+    }
+  }
+
   void _mostrarFormularioEmpleado(BuildContext context, int idEmpresa) {
     final nombreCtrl = TextEditingController();
     final cargoCtrl = TextEditingController();
@@ -215,7 +245,10 @@ class _DetailScreenState extends State<DetailScreen> {
                         ),
                         title: Text(empleado.nombre, style: const TextStyle(fontWeight: FontWeight.w600)),
                         subtitle: Text(empleado.cargo, style: TextStyle(color: Colors.grey.shade600)),
-                        trailing: IconButton(icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20), onPressed: () {}),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                          onPressed: () => _confirmDeleteEmpleado(context, empleado.id!, empleado.nombre),
+                        ),
                       ),
                     );
                   },
