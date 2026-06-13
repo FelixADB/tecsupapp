@@ -7,10 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   //usar ip en caso de utilizar dispositivo real
-  static const base = 'http://10.0.2.2:3000/api/empresas';
-  //static const base = 'https://tecsupapp-backend.onrender.com/api/empresas';
-  static const authBase = 'http://10.0.2.2:3000/api/auth';
-  static const empleadoBase = 'http://10.0.2.2:3000/api/empleados';
+  //static const base = 'http://10.0.2.2:3000/api/empresas';
+  static const base = 'https://tecsupapp-backend.onrender.com/api/empresas';
+  static const authBase = 'https://tecsupapp-backend.onrender.com/api/auth';
+  static const empleadoBase = 'https://tecsupapp-backend.onrender.com/api/empleados';
 
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
