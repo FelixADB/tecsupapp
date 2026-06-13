@@ -27,7 +27,6 @@ class _DetailScreenState extends State<DetailScreen> {
         Provider.of<EmpresaProvider>(context, listen: false).clearError();
         Provider.of<EmpleadoProvider>(context, listen: false).loadEmpleados(_empresaId);
       });
-      
       _isInit = true;
     }
   }
@@ -36,17 +35,12 @@ class _DetailScreenState extends State<DetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Confirmar Eliminación'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Confirmar Eliminación', style: TextStyle(fontWeight: FontWeight.bold)),
         content: Text('¿Estás seguro de que deseas eliminar "$nombre"?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Eliminar', style: TextStyle(color: Colors.red)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar', style: TextStyle(color: Colors.grey))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Eliminar', style: TextStyle(color: Colors.red))),
         ],
       ),
     );
@@ -58,17 +52,12 @@ class _DetailScreenState extends State<DetailScreen> {
         await provider.remove(id);
         if (mounted) {
           // ignore: use_build_context_synchronously
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Empresa eliminada'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Empresa eliminada'), backgroundColor: Colors.green));
           // ignore: use_build_context_synchronously
           Navigator.pop(context);
         }
       } catch (e) {
-        // Error will be shown by provider.errorMessage listener
+        // Manejado por el provider
       }
     }
   }
@@ -80,38 +69,24 @@ class _DetailScreenState extends State<DetailScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Registrar Empleado'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Registrar Empleado', style: TextStyle(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: nombreCtrl,
-              decoration: const InputDecoration(labelText: 'Nombre completo'),
-            ),
+            TextField(controller: nombreCtrl, decoration: const InputDecoration(labelText: 'Nombre completo')),
             const SizedBox(height: 10),
-            TextField(
-              controller: cargoCtrl,
-              decoration: const InputDecoration(labelText: 'Cargo / Puesto'),
-            ),
+            TextField(controller: cargoCtrl, decoration: const InputDecoration(labelText: 'Cargo / Puesto')),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar', style: TextStyle(color: Colors.grey))),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
             onPressed: () async {
               if (nombreCtrl.text.isEmpty || cargoCtrl.text.isEmpty) return;
-              
-              final nuevoEmp = Empleado(
-                nombre: nombreCtrl.text,
-                cargo: cargoCtrl.text,
-                empresaId: idEmpresa,
-              );
-              
+              final nuevoEmp = Empleado(nombre: nombreCtrl.text, cargo: cargoCtrl.text, empresaId: idEmpresa);
               await Provider.of<EmpleadoProvider>(context, listen: false).add(nuevoEmp);
-              
               if (context.mounted) Navigator.pop(ctx);
             },
             child: const Text('Guardar'),
@@ -126,116 +101,121 @@ class _DetailScreenState extends State<DetailScreen> {
     final provider = Provider.of<EmpresaProvider>(context);
     final isLoading = provider.isLoading;
 
-    // Show snackbar if error exists
     if (provider.errorMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(provider.errorMessage!),
-            backgroundColor: Colors.red,
-            onVisible: () {
-              provider.clearError();
-            },
-          ),
+          SnackBar(content: Text(provider.errorMessage!), backgroundColor: Colors.redAccent, onVisible: () => provider.clearError()),
         );
       });
     }
 
-    // Buscar la empresa actual por ID
-    final empresaActual = provider.empresas.firstWhere(
-      (e) => e.id == _empresaId,
-      orElse: () => Empresa(id: -1, nombre: 'No encontrada', ruc: ''),
-    );
+    final empresaActual = provider.empresas.firstWhere((e) => e.id == _empresaId, orElse: () => Empresa(id: -1, nombre: 'No encontrada', ruc: ''));
 
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: Text('Detalle de la Empresa'),
+        elevation: 0,
+        backgroundColor: Colors.grey.shade50,
+        foregroundColor: Colors.black87,
+        title: const Text('Detalles', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       floatingActionButton: FloatingActionButton(
+        elevation: 2,
+        backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         onPressed: () => _mostrarFormularioEmpleado(context, _empresaId),
         child: const Icon(Icons.person_add),
       ),
       body: Column(
         children: [
-          if (isLoading) LinearProgressIndicator(),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          if (isLoading) const LinearProgressIndicator(minHeight: 2),
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(empresaActual.nombre, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
+                const SizedBox(height: 16),
+                _buildInfoRow(Icons.numbers, "RUC", empresaActual.ruc),
+                const SizedBox(height: 12),
+                _buildInfoRow(Icons.location_on_outlined, "Dirección", empresaActual.direccion ?? '-'),
+                const SizedBox(height: 12),
+                _buildInfoRow(Icons.category_outlined, "Rubro", empresaActual.rubro ?? '-'),
+                const SizedBox(height: 24),
+                Row(
                   children: [
-                    Text(empresaActual.nombre, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 10),
-                    Text("RUC: ${empresaActual.ruc}", style: TextStyle(fontSize: 18)),
-                    SizedBox(height: 10),
-                    Text("Direccion: ${empresaActual.direccion ?? '-'}", style: TextStyle(fontSize: 18)),
-                    SizedBox(height: 10),
-                    Text("Rubro: ${empresaActual.rubro ?? '-'}", style: TextStyle(fontSize: 18)),
-                    SizedBox(height: 20),
-                    Row(
-                      children: [
-                        ElevatedButton.icon(
-                          icon: Icon(Icons.edit),
-                          label: Text('Editar'),
-                          onPressed: isLoading
-                              ? null
-                              : () => Navigator.pushNamed(context, "/form", arguments: empresaActual),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.indigo,
+                          side: BorderSide(color: Colors.indigo.shade100),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        SizedBox(width: 10),
-                        ElevatedButton.icon(
-                          icon: Icon(Icons.delete),
-                          label: Text("Eliminar"),
-                          onPressed: isLoading
-                              ? null
-                              : () => _confirmDelete(context, empresaActual.id!, empresaActual.nombre),
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        label: const Text('Editar'),
+                        onPressed: isLoading ? null : () => Navigator.pushNamed(context, "/form", arguments: empresaActual),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.redAccent,
+                          side: BorderSide(color: Colors.red.shade100),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                      ],
+                        icon: const Icon(Icons.delete_outline, size: 18),
+                        label: const Text("Eliminar"),
+                        onPressed: isLoading ? null : () => _confirmDelete(context, empresaActual.id!, empresaActual.nombre),
+                      ),
                     ),
                   ],
                 ),
-              ),
+              ],
             ),
           ),
-
+          
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            padding: EdgeInsets.only(left: 20.0, bottom: 8.0, top: 8.0),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text(
-                'Empleados Registrados',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+              child: Text('Empleados', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
             ),
           ),
-          const Divider(),
 
           Expanded(
             child: Consumer<EmpleadoProvider>(
               builder: (context, empProvider, child) {
-                if (empProvider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                
-                if (empProvider.empleados.isEmpty) {
-                  return const Center(child: Text('No hay empleados registrados.'));
-                }
+                if (empProvider.isLoading) return const Center(child: CircularProgressIndicator());
+                if (empProvider.empleados.isEmpty) return Center(child: Text('No hay empleados registrados.', style: TextStyle(color: Colors.grey.shade500)));
 
                 return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: empProvider.empleados.length,
                   itemBuilder: (context, index) {
                     final empleado = empProvider.empleados[index];
-                    return ListTile(
-                      leading: const CircleAvatar(child: Icon(Icons.person)),
-                      title: Text(empleado.nombre),
-                      subtitle: Text(empleado.cargo),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
-                        onPressed: () {}, 
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade100),
+                      ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.indigo.shade50,
+                          child: Text(empleado.nombre[0].toUpperCase(), style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold)),
+                        ),
+                        title: Text(empleado.nombre, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: Text(empleado.cargo, style: TextStyle(color: Colors.grey.shade600)),
+                        trailing: IconButton(icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20), onPressed: () {}),
                       ),
                     );
                   },
@@ -245,6 +225,17 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: Colors.grey.shade500),
+        const SizedBox(width: 8),
+        Text("$label: ", style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+        Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w500))),
+      ],
     );
   }
 }

@@ -23,38 +23,33 @@ class _ListScreenState extends State<ListScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Confirmar Eliminación'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Confirmar Eliminación', style: TextStyle(fontWeight: FontWeight.bold)),
         content: Text('¿Estás seguro de que deseas eliminar "$nombre"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancelar'),
+            child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Eliminar', style: TextStyle(color: Colors.red)),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
 
     if (confirmed == true) {
-      // ignore: use_build_context_synchronously
       final provider = Provider.of<EmpresaProvider>(context, listen: false);
       try {
         await provider.remove(id);
         if (mounted) {
-          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Empresa eliminada'),
-              backgroundColor: Colors.green,
-            ),
+            const SnackBar(content: Text('Empresa eliminada'), backgroundColor: Colors.green),
           );
         }
         return true;
       } catch (e) {
-        // Error will be shown by provider.errorMessage listener
         return false;
       }
     }
@@ -70,76 +65,86 @@ class _ListScreenState extends State<ListScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(provider.errorMessage!),
-            backgroundColor: Colors.red,
-            onVisible: () {
-              provider.clearError();
-            },
+            backgroundColor: Colors.redAccent,
+            onVisible: () => provider.clearError(),
           ),
         );
       });
     }
 
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Empresas', style: TextStyle(fontWeight: FontWeight.bold),),
+        elevation: 0,
+        backgroundColor: Colors.grey.shade50,
+        foregroundColor: Colors.black87,
+        title: const Text('Directorio', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: -0.5)),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: TextField(
               onChanged: (value) => provider.buscarEmpresa(value),
               decoration: InputDecoration(
-                labelText: 'Buscar por Nombre o RUC',
-                prefixIcon: const Icon(Icons.search),
+                hintText: 'Buscar por Nombre o RUC',
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.grey.shade200),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.grey.shade200),
                 ),
               ),
             ),
           ),
-
-          if (provider.isLoading) LinearProgressIndicator(),
+          if (provider.isLoading) const LinearProgressIndicator(minHeight: 2),
           Expanded(
             child: provider.empresas.isEmpty
-                ? const Center(child: Text('No hay empresas registradas'))
+                ? const Center(child: Text('No hay empresas registradas', style: TextStyle(color: Colors.grey)))
                 : RefreshIndicator(
-                    onRefresh: () async {
-                      // Esto se ejecuta al jalar la lista hacia abajo
-                      await provider.load(); 
-                    },
+                    onRefresh: () async => await provider.load(),
                     child: ListView.builder(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(16),
                       itemCount: provider.empresas.length,
                       itemBuilder: (_, i) {
                         final Empresa e = provider.empresas[i];
-                        
-                        // 3. NUEVO: Envolvemos la Card en un Dismissible
                         return Dismissible(
-                          key: Key(e.id.toString()), // Llave única obligatoria
-                          direction: DismissDirection.endToStart, // Solo deslizar de derecha a izquierda
+                          key: Key(e.id.toString()),
+                          direction: DismissDirection.endToStart,
                           background: Container(
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.only(right: 20),
-                            color: Colors.red,
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            child: const Icon(Icons.delete, color: Colors.white, size: 30),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            margin: const EdgeInsets.only(bottom: 12),
+                            child: const Icon(Icons.delete, color: Colors.white),
                           ),
-                          // Confirmación antes de borrar al deslizar
-                          confirmDismiss: (direction) async {
-                            return await _confirmDelete(context, e.id!, e.nombre);
-                          },
-                          // El contenido original (tu Card se mantiene igual, solo le quitamos el botón de borrar porque ya se hace deslizando)
-                          child: Card(
-                            elevation: 3,
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(16)),
+                          confirmDismiss: (direction) async => await _confirmDelete(context, e.id!, e.nombre),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
                             child: ListTile(
-                              title: Text(e.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
-                              subtitle: Text("RUC: ${e.ruc}"),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              title: Text(e.nombre, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                              subtitle: Padding(
+                                padding: const EdgeInsets.only(top: 4.0),
+                                child: Text("RUC: ${e.ruc}", style: TextStyle(color: Colors.grey.shade600)),
+                              ),
                               onTap: () => Navigator.pushNamed(context, "/detail", arguments: e),
                               trailing: IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.indigo),
+                                icon: const Icon(Icons.edit_outlined, color: Colors.indigo),
                                 onPressed: () => Navigator.pushNamed(context, "/form", arguments: e),
                               ),
                             ),
@@ -152,9 +157,12 @@ class _ListScreenState extends State<ListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        heroTag: null,
+        elevation: 2,
+        backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         onPressed: provider.isLoading ? null : () => Navigator.pushNamed(context, "/form"),
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }

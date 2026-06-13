@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class FormScreen extends StatefulWidget {
-   
   const FormScreen({super.key});
 
   @override
@@ -12,7 +11,6 @@ class FormScreen extends StatefulWidget {
 }
 
 class _FormScreenState extends State<FormScreen> {
-
   final _formKey = GlobalKey<FormState>();
   late TextEditingController nombreCtrl;
   late TextEditingController rucCtrl;
@@ -53,11 +51,26 @@ class _FormScreenState extends State<FormScreen> {
         }
         _initialized = true;
       }
-      // Clear any previous errors
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Provider.of<EmpresaProvider>(context, listen: false).clearError();
       });
     }
+
+   InputDecoration _flatInputDecoration(String label) {
+     return InputDecoration(
+       labelText: label,
+       filled: true,
+       fillColor: Colors.white,
+       border: OutlineInputBorder(
+         borderRadius: BorderRadius.circular(12),
+         borderSide: BorderSide(color: Colors.grey.shade200),
+       ),
+       enabledBorder: OutlineInputBorder(
+         borderRadius: BorderRadius.circular(12),
+         borderSide: BorderSide(color: Colors.grey.shade200),
+       ),
+     );
+   }
 
    @override
    Widget build(BuildContext context) {
@@ -65,38 +78,47 @@ class _FormScreenState extends State<FormScreen> {
      final isLoading = provider.isLoading;
      
      return Scaffold(
+       backgroundColor: Colors.grey.shade50,
        appBar: AppBar(
-         title: Text(empresa == null ? "Nueva Empresa" : "Editar empresa"),
+         elevation: 0,
+         backgroundColor: Colors.grey.shade50,
+         foregroundColor: Colors.black87,
+         title: Text(empresa == null ? "Nueva Empresa" : "Editar Empresa", style: const TextStyle(fontWeight: FontWeight.bold)),
        ),
-       body: Padding(
-         padding: EdgeInsetsGeometry.all(16),
-         child: Form(
-           key: _formKey,
-           child: ListView(
-             children: [
-               TextFormField(
-                 controller: nombreCtrl,
-                 decoration: InputDecoration(labelText: "Nombre"),
-                 validator: (v) => v!.isEmpty ? "Ingrese su nombre" : null,
-               ),
-               SizedBox(height: 16),
-               TextFormField(
-                 controller: rucCtrl,
-                 decoration: InputDecoration(labelText: "RUC"),
-                 validator: (v) => v!.length != 11 ? "Debe tener 11 digitos" : null,
-               ),
-               SizedBox(height: 16),
-               TextFormField(
-                 controller: direccionCtrl,
-                 decoration: InputDecoration(labelText: "Direccion"),
-               ),
-               SizedBox(height: 16),
-               TextFormField(
-                 controller: rubroCtrl,
-                 decoration: InputDecoration(labelText: "Rubro"),
-               ),
-               SizedBox(height: 25),
-               ElevatedButton(
+       body: Form(
+         key: _formKey,
+         child: ListView(
+           padding: const EdgeInsets.all(24),
+           children: [
+             TextFormField(
+               controller: nombreCtrl,
+               decoration: _flatInputDecoration("Nombre"),
+               validator: (v) => v!.isEmpty ? "Ingrese el nombre" : null,
+             ),
+             const SizedBox(height: 16),
+             TextFormField(
+               controller: rucCtrl,
+               decoration: _flatInputDecoration("RUC"),
+               validator: (v) => v!.length != 11 ? "Debe tener 11 digitos" : null,
+             ),
+             const SizedBox(height: 16),
+             TextFormField(
+               controller: direccionCtrl,
+               decoration: _flatInputDecoration("Dirección"),
+             ),
+             const SizedBox(height: 16),
+             TextFormField(
+               controller: rubroCtrl,
+               decoration: _flatInputDecoration("Rubro"),
+             ),
+             const SizedBox(height: 32),
+             SizedBox(
+               height: 50,
+               child: ElevatedButton(
+                 style: ElevatedButton.styleFrom(
+                   elevation: 0,
+                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                 ),
                  onPressed: isLoading
                      ? null
                      : () async {
@@ -115,44 +137,25 @@ class _FormScreenState extends State<FormScreen> {
                                await provider.update(empresa!.id!, nueva);
                              }
                              if (!mounted) return;
-                             // ignore: use_build_context_synchronously
                              ScaffoldMessenger.of(context).showSnackBar(
-                               SnackBar(
-                                 content: Text('Empresa guardada'),
-                                 backgroundColor: Colors.green,
-                               ),
+                               const SnackBar(content: Text('Empresa guardada'), backgroundColor: Colors.green),
                              );
-                             // ignore: use_build_context_synchronously
                              Navigator.pop(context);
                            } catch (e) {
                              if (mounted) {
-                               // ignore: use_build_context_synchronously
                                ScaffoldMessenger.of(context).showSnackBar(
-                                 SnackBar(
-                                   content: Text(provider.errorMessage ?? 'Error al guardar'),
-                                   backgroundColor: Colors.red,
-                                 ),
+                                 SnackBar(content: Text(provider.errorMessage ?? 'Error'), backgroundColor: Colors.redAccent),
                                );
                              }
                            }
                          }
                        },
                  child: isLoading
-                     ? SizedBox(
-                         height: 20,
-                         width: 20,
-                         child: CircularProgressIndicator(
-                           strokeWidth: 2,
-                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                         ),
-                       )
-                     : Text(
-                         empresa == null ? "Guardar" : "Actualizar",
-                         style: TextStyle(fontSize: 18),
-                       ),
-                 ),
-             ],
-           ),
+                     ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                     : Text(empresa == null ? "Guardar" : "Actualizar", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+               ),
+             ),
+           ],
          ),
        ),
      );
